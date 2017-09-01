@@ -1,0 +1,152 @@
+' Gambas module file
+
+Public db As New Connection
+Public MysqlServeur As String ' nom du serveur mysql utilisé par la connexion ssh
+Public mysqlPort As String
+Public SshPort As String
+
+Public SshPassw As String
+Public SshPassphrase As String
+Public SshHost As String
+Public SshUser As String
+Public RemotePort As String
+Public TunnelPid As String ' pid du tunnel ssh conservé afin de l'arrêter en quittant le programme
+
+'########################## DÉBUT DES AJOUTS TUNNEL SSH
+
+'*************************************************
+'* Collationnement des variables de connexion sql
+'* MG - 07 janvier 2010
+'*************************************************
+Public Sub glb()
+
+  '# -- valeurs de connexion communes avec ou sans tunnel
+
+  db.type = Settings["/dbase/type"]
+  db.Name = Settings["/dbase/Prefixe"] & Settings["/dbase/Name"]
+  'db.name = "Laurux"
+  db.Login = Settings["/dbase/Login"]
+  db.Password = hexdblKey.crypt("de", Settings["/dbase/Password"], "Laurux")
+  '# -- valeurs dépendant du tunnel
+  If Settings["/dbase/Con-ssh"] Then
+    '# -- Valeurs de connexion via tunnel
+    db.Host = "127.0.0.1"
+    'db.Host = Settings["/dbase/Host"]
+    db.Port = Settings["/dbase/ssh/Portlocal"]
+    MysqlPort = Settings["/dbase/ssh/Portlocal"]
+    ' on définit des variables pour l'établissement du tunnel ssh
+    MysqlServeur = Settings["/dbase/Host"]
+    RemotePort = Settings["/dbase/Port"]
+    SshPort = Settings["/dbase/ssh/Portssh"]
+    SshPassw = hexdblKey.crypt("de", Settings["/dbase/ssh/Passwssh"], "LauruX2012")
+    SshPassphrase = Settings["/dbase/ssh/Passphrase"]
+    SshHost = Settings["/dbase/ssh/Hostssh"]
+    SshUser = Settings["/dbase/ssh/Login"]
+  Else
+    '# -- Valeurs de connexion sans tunnel
+    db.Host = Settings["/dbase/Host"]
+    db.Port = Settings["/dbase/Port"]
+  Endif
+
+End
+
+'*************************************
+'* Fonction de montage du tunnel ssh
+'* MG - 07 janvier 2010
+'*************************************
+
+Public Function monteTunnel() As Boolean
+
+  Dim $ligne_ps As String ' retour de la commande ps
+  Dim $tunnel_ok As Boolean ' flag de réussite du montage du tunnel
+  Dim $array_pid As New String[] ' tableau pour les résultats de la recherche regex, ne devrait contenir qu'un résultat
+  Dim i As Integer ' réponse à l'éventuel message de pid existant
+  Dim Port As String = db.Port
+
+  '# -- On tente d'établir un tunnel ssh, on vérifie d'abord qu'il n'en existe pas un
+  '# -- si il en existe un on demande quoi faire
+  Shell "ps u -C ssh | grep " & db.Port & ":" & MysqlServeur & ":" & RemotePort Wait To $ligne_ps
+  Wait 0.5
+  If Not $ligne_ps Then
+    '# -- Lancement du tunnel ssh sur le modèle : ssh -f -N -L 13306:serveur.tld:3306 -p 222 user@serveur.tld
+    Print Now & " - " & "Pas de tunnel en place, on lance un tunnel ssh "
+    'Exec ["ssh", "-N", "-f", sshuser & "@" & sshhost, "-p", sshport, "-L", db.Port & ":" & MysqlServeur & ":" & RemotePort] Wait
+    Print "sshpass -p" & SshPassw & " " & "ssh -N -f " & sshuser & "@" & sshhost & " -p " & sshport & " -L " & Port & ":" & MysqlServeur & ":" & RemotePort
+    Shell "sshpass -p'" & SshPassw & "' " & "ssh -N -f " & sshuser & "@" & sshhost & " -p " & sshport & " -L" & Port & ":" & MysqlServeur & ":" & RemotePort Wait
+    Shell "ps u -C ssh | grep " & db.Port & ":" & MysqlServeur & ":" & RemotePort Wait To $ligne_ps
+    If Not $ligne_ps Then
+      Print Now & " - " & "Erreur dans le lancement du tunnel ssh"
+      $tunnel_ok = False
+    Else
+      Print Now & " - " & "Lancement du tunnel ssh réussi"
+      ' le numéro de processus est modifié par l'ordonnanceur à cause du montage en arrière plan
+      ' on le recherche avec ps (pour l'instant je scinde la commande à cause d'un problème grep -> sed)
+      Shell "ps u -C ssh | grep " & Port & ":" & MysqlServeur & ":" & RemotePort Wait To $ligne_ps
+      '$array_pid = do_pcre_extract(Trim$($ligne_ps), "([0-9]+)")
+      $array_pid = Split($ligne_ps, " ")
+      For i = 1 To $array_pid.Count
+        TunnelPid = $array_pid[i]
+        If Not IsNull(TunnelPid) Then Break
+      Next
+      Print Now & " - " & "Le PID du processus tunnel est " & TunnelPid
+      $tunnel_ok = True
+    Endif
+  Else
+    ' on demande si il faut conserver le tunnel existant à la clôture de l'application
+    '$reponse = Message.Question("Un tunnnel SSH avec le serveur est déjà en place.\nIl est possible qu'il n'aie pas été fermé suite à un arrêt brutal de Laurux. \nIl est également possible que vous l'ayez monté vous même et veuillez le conserver actif.\nSi vous ne savez pas quoi répondre alors demandez sa fermeture en fin d'utilisation de Laurux.", "Fermer le tunnel lors de l'arrêt de l'application", "Conserver le tunnel")
+    '  If $reponse = 1 Then
+    '$array_pid = do_pcre_extract(Trim$($ligne_ps), "([0-9]+)")
+    'TunnelPid = $array_pid[0]
+    $array_pid = Split($ligne_ps, " ")
+    For i = 1 To $array_pid.Count
+      TunnelPid = $array_pid[i]
+      If Not IsNull(TunnelPid) Then Break
+    Next
+    '   Endif
+    Print Now & " - " & "Un tunnel ssh, de pid " & TunnelPid & " est déjà en place, on l'utilise"
+    $tunnel_ok = True
+  Endif
+  Return $tunnel_ok
+
+End
+
+'**********************************************************************************
+'* routine de fermeture du tunnel à appeler lors de la fermeture de l'application
+'* MG - 07 janvier 2010
+'**********************************************************************************
+Public Sub fermeTunnel()
+
+  If TunnelPid <> Null Then
+    Exec ["kill", TunnelPid]
+    If Process.LastValue = 0 Then
+      Print Now & " - " & "suppression du processus tunnel " & TunnelPid
+    Else
+      Print Now & " - " & "echec de suppression du processus tunnel " & TunnelPid
+    Endif
+  Endif
+
+End
+
+'*******************************************************************************
+'* Renvoit les résultats d'une regex contenant des captures (..)
+'* Elle prend en argument la chaîne cible et la chaîne d'expression rationnelle
+'* Les captures sont renvoyées dans un tableau de chaînes
+'* MG - 07 janvier 2010
+'*******************************************************************************
+Public Function do_pcre_extract($cible As String, $regex_string As String) As String[]
+
+  Dim $regex As Regexp           ' objet regex
+  Dim $nb_match As Integer       ' nombre de captures effectuées
+  Dim $compteur As Integer       ' compteur d'indice des captures
+  Dim $ar_retour As New String[] ' tableau de retour
+
+  $regex = New Regexp($cible, $regex_string)
+  $nb_match = $regex.SubMatches.Count
+  For $compteur = 0 To $nb_match - 1
+    $ar_retour.Add($regex.SubMatches[$compteur].Text, $compteur)
+  Next
+  Return $ar_retour
+Catch
+  Print Now & " - " & "erreur avec la fonction do_pcre_extract qui a reçu : cible = " & $cible & " et regex=" & $regex_string
+
+End

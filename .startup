@@ -1,0 +1,15 @@
+Main
+
+0
+0
+1.0.6
+
+gb.compress
+gb.compress.bzlib2
+gb.compress.zlib
+gb.crypt
+gb.db
+gb.db.mysql
+gb.settings
+gb.pcre
+

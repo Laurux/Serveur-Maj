@@ -1,0 +1,688 @@
+' Gambas module file
+
+Public Serveur As New Connection
+Private hfile As File
+Private Filename As String
+Private Schmprix As String = Settings["/Soc" & Settings["/Soc"] & "/Schmprix"]
+Private Suppr As Integer = 1
+
+Public Sub Main()
+
+  Dim Filelock, texte2 As String
+
+  Filelock = Schmprix & "/Maj.lock"
+  If Not Exist(Filelock) Then
+    Try hFile = Open filelock For Create
+    Utils.glb()
+    Try Utils.db.Open
+    Try Utils.db.exec("SET NAMES 'latin1'")
+    Maj()
+    Utils.fermeTunnel()
+    Utils.db.Close
+    Kill Filelock
+  Else
+    Texte2 = Schmprix & "/Erreur.txt"
+    If Exist(Texte2) Then Kill Texte2
+    Try hFile = Open texte2 For Write Create
+    Print #hFile, "Traitement impossible ! Veuillez supprimez le fichier " & Schmprix & "/Maj.lock"
+    Shell "xdg-open " & Texte2
+    Wait 1
+    Close #hFile
+  Endif
+
+End
+
+Public Sub Prog_Editeur(Fic As String) As String
+
+  Exec ["xdg-open", Fic]
+
+End
+
+Public Sub Maj()
+
+  Dim Lig2 As String[]
+  Dim Lig As String
+  Dim Qteetiq As Integer
+  Dim Etiqp As Result
+
+  'On traite les articles
+  Filename = Schmprix & "/Art_Serveur.txt"
+  If Exist(Schmprix & "/Art.txt") Then Kill Schmprix & "/Art.txt"
+  Try Move Schmprix & "/Art_Serveur.txt" To Schmprix & "/Art.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Art.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Try Utils.db.Exec("INSERT INTO Fiches_Art (art_code, art_design, art_fam, art_four, art_cequ, art_cbarre, art_cfour, art_pbht, art_tr, art_pauaht,art_coef,art_pvht, art_tva, art_pvttc, art_cdarr, art_dec, art_stocke,  art_nbd, art_design2, art_ect, art_eco, art_paht, art_txconv,   art_pmp, art_stkmin, art_stkmax, art_suspendu, art_cpp, art_copp, art_frais, art_prvt, art_ect2, art_eco2, art_depg, art_cnsg, art_qte, art_refliee) VALUES (&1, &2, &3, &4, &5, &6, &7, &8, &9, &{10}, &{11}, &{12}, &{13}, &{14}, &{15}, &{16}, &{17}, &{18}, &{19}, &{20}, &{21}, &{22}, &{23}, &{24}, &{25}, &{26}, &{27}, &{28}, &{29}, &{30}, &{31}, &{32}, &{33}, &{34}, &{35}, &{36}, &{37})", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], convBStr(Lig2[17]), Lig2[18], Lig2[19], convBStr(Lig2[20]), convBStr(Lig2[21]), Lig2[22], Lig2[23], Lig2[24], Lig2[25], Lig2[26], convBStr(Lig2[27]), convBStr(Lig2[28]), Lig2[29], Lig2[30], Lig2[31], convBStr(Lig2[32]), Lig2[33], Lig2[34], Lig2[35], Lig2[36], Lig2[37])
+      Utils.db.Exec("Update Fiches_Art  SET  art_etiq = &2, art_poids = &3, art_vol= &4, art_mincom = &5, art_poids2 = &6, art_mat = &7, art_marque = &8, art_photo = &9, art_crst = &{10}, art_impcar = &{11}, art_casier = &{12}, art_pvcons = &{13},  art_prdcomp = &{14}, art_impdetail = &{15}, art_remcas1 = &{16},  art_remcas2 = &{17}, art_remcas3 = &{18}, art_bonus = &{19}, art_pbfbt = &{20}, art_datefbt = &{21}, art_centrale = &{22}, art_refcentrale = &{23}, art_colvte = &{24}, art_pvht2 = &{25}, art_cn8 = &{26}, art_crpl1 = &{27}, art_ua = &{28}, art_uv = &{29} , art_ect = &{30} , art_dpa = &{31}  where art_code = &1", Lig2[1], Lig2[38], Lig2[39], Lig2[40], Lig2[41], Lig2[42], convBStr(Lig2[43]), Lig2[44], Lig2[45], Lig2[46], convBStr(Lig2[47]), Lig2[48], Lig2[49], convBStr(Lig2[50]), convBStr(Lig2[51]), Lig2[52], Lig2[53], Lig2[54], Lig2[55], Lig2[56], Lig2[57], Lig2[58], Lig2[59], Lig2[60], Lig2[61], Lig2[62], Lig2[63], Lig2[64], Lig2[65], convBStr(Lig2[66]), "0.00")
+    Else
+      If Lig2[0] = "M" Then
+        Utils.db.Exec("Update  Fiches_Art  SET   art_design = &2 , art_fam = &3 , art_four = &4 , art_cequ = &5,art_cbarre = &6, art_cfour = &7, art_pbht = &8 , art_tr = &9 , art_pauaht = &{10} , art_coef = &{11}, art_pvht = &{12}, art_tva = &{13}, art_pvttc = &{14}, art_cdarr = &{15}, art_dec = &{16}, art_stocke = &{17}, art_nbd = &{18}, art_design2 = &{19}, art_ect= &{20}, art_eco = &{21}, art_paht = &{22}, art_txconv = &{23} , art_pmp = &{24}, art_stkmin = &{25}, art_stkmax = &{26}, art_suspendu = &{27}, art_cpp = &{28}, art_copp = &{29}, art_frais = &{30}, art_prvt = &{31}, art_ect2 = &{32}, art_eco2 = &{33}, art_depg = &{34}, art_cnsg = &{35}, art_qte = &{36}, art_refliee = &{37} where art_code = &1", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], convBStr(Lig2[17]), Lig2[18], Lig2[19], convBStr(Lig2[20]), convBStr(Lig2[21]), Lig2[22], Lig2[23], Lig2[24], Lig2[25], Lig2[26], convBStr(Lig2[27]), convBStr(Lig2[28]), Lig2[29], Lig2[30], Lig2[31], convBStr(Lig2[32]), Lig2[33], Lig2[34], Lig2[35], Lig2[36], Lig2[37])
+        Utils.db.Exec("UPdate  Fiches_Art  SET art_etiq = &2, art_poids = &3, art_vol = &4, art_mincom = &5, art_poids2 = &6, art_mat = &7, art_marque = &8, art_photo = &9, art_crst = &{10}, art_impcar = &{11}, art_casier = &{12}, art_pvcons = &{13}, art_prdcomp = &{14}, art_impdetail = &{15}, art_remcas1 = &{16}, art_remcas2 = &{17}, art_remcas3 = &{18}, art_bonus = &{19}, art_pbfbt = &{20}, art_datefbt = &{21}, art_centrale = &{22}, art_refcentrale = &{23}, art_colvte = &{24}, art_pvht2 = &{25}, art_cn8 = &{26}, art_crpl1 = &{27}, art_ua = &{28}, art_uv = &{29}, art_ect = &{30}  WHERE art_code = &1", Lig2[1], Lig2[38], Lig2[39], Lig2[40], Lig2[41], Lig2[42], convBStr(Lig2[43]), Lig2[44], Lig2[45], Lig2[46], convBStr(Lig2[47]), Lig2[48], Lig2[49], convBStr(Lig2[50]), convBStr(Lig2[51]), Lig2[52], Lig2[53], Lig2[54], Lig2[55], Lig2[56], Lig2[57], Lig2[58], Lig2[59], Lig2[60], Lig2[61], Lig2[62], Lig2[63], Lig2[64], Lig2[65], convBStr(Lig2[66]))
+      Else
+        If Lig2[0] = "S" Then
+          suppr = 1
+          art_Suppr(Lig2[1], Lig2[2], Lig2[3])
+          If suppr = 1 Then
+            Try Utils.db.Exec("DELETE FROM Fiches_Art WHERE art_code = &1", Lig2[1])
+            Try Utils.db.Exec("DELETE FROM Fiches_CdBarre WHERE codep = &1", Lig2[1])
+            Try Utils.db.Exec("DELETE FROM Fiches_Rpl1 WHERE codep = &1", Lig2[1])
+            Try Utils.db.Exec("DELETE FROM Fiches_Rpl2 WHERE codep = &1", Lig2[1])
+            Try Utils.db.Exec("DELETE FROM Fiches_Pdocs WHERE code = &1", Lig2[1])
+            Try Utils.db.Exec("DELETE FROM Fiches_Cequ WHERE  codequ = &1 or codep = &1 or codequ = &2 or codep = &2", Lig2[1], Lig2[3])
+          Endif
+        Endif
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les familles
+  Filename = Schmprix & "/Fam_Serveur.txt"
+  If Exist(Schmprix & "/Fam.txt") Then Kill Schmprix & "/Fam.txt"
+  Try Move Schmprix & "/Fam_Serveur.txt" To Schmprix & "/Fam.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Fam.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Utils.db.Exec("INSERT INTO Fiches_Fam (code_fam,libell_fam,compt_fam,compt2_fam,compt3_fam,compt4_fam,compt5_fam, coef_fam, cdtva_fam, txtva_fam, cptrem_fam, ect_fam, rem_fam, qte1, qte2, rem1, qte3, qte4, rem2, qte5, qte6, rem3, qte7, qte8, rem4, qte9, qte10, rem5, qte11, qte12, rem6) VALUES (&1, &2, &3, &4, &5, &6, &7, &8, &9, &{10}, &{11}, &{12}, &{13}, &{14}, &{15}, &{16}, &{17}, &{18}, &{19}, &{20}, &{21}, &{22}, &{23}, &{24}, &{25}, &{26}, &{27}, &{28}, &{29}, &{30}, &{31})", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], Lig2[17], Lig2[18], Lig2[19], Lig2[20], Lig2[21], Lig2[22], Lig2[23], Lig2[24], Lig2[25], Lig2[26], Lig2[27], Lig2[28], Lig2[29], Lig2[30], Lig2[31])
+    Else
+      If Lig2[0] = "M" Then
+        Utils.db.Exec("UPdate  Fiches_Fam  SET   libell_fam = &2 , compt_fam = &3, compt_fam = &4, compt3_fam = &5, compt4_fam = &6, compt5_fam = &7, coef_fam = &8 , cdtva_fam = &9 , txtva_fam = &{10}, cptrem_fam = &{11} , ect_fam = &{12} , rem_fam = &{13}, qte1 = &{14}, qte2 = &{15}, rem1 = &{16}, qte3 = &{17}, qte4 = &{18}, rem2 = &{19} WHERE code_fam = &1", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], Lig2[17], Lig2[18], Lig2[19])
+        Utils.db.Exec("UPdate  Fiches_Fam  SET  qte5 = &2, qte6 = &3, rem3 = &4, qte7 = &5, qte8 = &6, rem4 = &7, qte9 = &8, qte10 = &9, rem5 = &{10}, qte11 = &{11}, qte12=  &{12}, rem6 = &{13}  WHERE code_fam = &1", Lig2[1], Lig2[20], Lig2[21], Lig2[22], Lig2[23], Lig2[24], Lig2[25], Lig2[26], Lig2[27], Lig2[28], Lig2[29], Lig2[30], Lig2[31])
+      Else
+        If Lig2[0] = "S" Then
+          suppr = 1
+          FamSuppr(Lig2[1])
+        Endif
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  'On traite les docs produits
+  Filename = Schmprix & "/DocA_Serveur.txt"
+  If Exist(Schmprix & "/DocA.txt") Then Kill Schmprix & "/DocA.txt"
+  Try Move Schmprix & "/DocA_Serveur.txt" To Schmprix & "/DocA.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/DocA.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Try Utils.db.Exec("INSERT INTO Docs_Produits (code,doc, doc2, org) values ( &1, &2, &3, &4)", Lig2[1], Lig2[2], Lig2[1] & "," & Lig2[3], "Docs")
+    Else
+      If Lig2[0] = "S" Then
+        Try Utils.db.Exec("DELETE FROM Docs_Produits WHERE code = &1 and doc = &2", Lig2[1], Lig2[2])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les codes équivalents
+  Filename = Schmprix & "/EQ_Serveur.txt"
+  If Exist(Schmprix & "/EQ.txt") Then Kill Schmprix & "/EQ.txt"
+  Try Move Schmprix & "/EQ_Serveur.txt" To Schmprix & "/EQ.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/EQ.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[1] = "M" Then
+      MajEqu(Lig2[2], Lig2[3])
+    Else
+      If Lig2[1] = "S" Then
+        DelCodequ(Lig2[2], Lig2[3])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les codes barre
+  Filename = Schmprix & "/CB_Serveur.txt"
+  If Exist(Schmprix & "/CB.txt") Then Kill Schmprix & "/CB.txt"
+  Try Move Schmprix & "/CB_Serveur.txt" To Schmprix & "/CB.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/CB.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[1] = "M" Then
+      MajCodeBarre(Lig2[2], Lig2[3])
+    Else
+      If Lig2[1] = "S" Then
+        DelCodeBarre(Lig2[2], Lig2[3])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les articles de remplacement rpl1
+  Filename = Schmprix & "/Rpl1_Serveur.txt"
+  If Exist(Schmprix & "/Rpl1.txt") Then Kill Schmprix & "/Rpl1.txt"
+  Try Move Schmprix & "/Rpl1_Serveur.txt" To Schmprix & "/Rpl1.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Rpl1.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      MajRpl1(Lig2[1], Lig2[2])
+    Else
+      If Lig2[0] = "S" Then
+        DelRpl1(Lig2[1], Lig2[2])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les articles de remplacement rpl2
+  Filename = Schmprix & "/Rpl2_Serveur.txt"
+  If Exist(Schmprix & "/Rpl2.txt") Then Kill Schmprix & "/Rpl2.txt"
+  Try Move Schmprix & "/Rpl2_Serveur.txt" To Schmprix & "/Rpl2.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Rpl2.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      MajRpl2(Lig2[1], Lig2[2])
+    Else
+      If Lig2[0] = "S" Then
+        DelRpl2(Lig2[1], Lig2[2])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les fournisseurs
+  Filename = Schmprix & "/Four_Serveur.txt"
+  If Exist(Schmprix & "/Four.txt") Then Kill Schmprix & "/Four.txt"
+  Try Move Schmprix & "/Four_Serveur.txt" To Schmprix & "/Four.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Four.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Utils.db.Exec("INSERT INTO Fiches_Four (fo_code,fo_col,fo_rs_soc,fo_nom,fo_pnm,fo_adr1,fo_adr2,fo_cd_ptl,fo_ville,fo_email,fo_tel_std,fo_tel_bur,fo_tel_post,fo_pble,fo_fx1,fo_fx2,fo_obs,fo_cd_bq,fo_cd_gch,fo_num_cpt,fo_cle_rib,fo_dom,fo_id_tva,fo_cd_cli,fo_collectif, fo_site, fo_cdech, fo_pays, fo_franco, fo_centrale, fo_ccentrale, fo_copie, fo_mincom, fo_iban, fo_bic, fo_exo, fo_fport, fo_cb) VALUES (&1,&2,&3,&4,&5,&6,&7,&8,&9,&{10},&{11},&{12},&{13},&{14},&{15},&{16},&{17},&{18},&{19},&{20},&{21},&{22},&{23},&{24},&{25}, &{26}, &{27}, &{28}, &{29}, &{30}, &{31}, &{32}, &{33}, &{34}, &{35}, &{36}, &{37}, &{38})", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], Lig2[17], Lig2[18], Lig2[19], Lig2[20], Lig2[21], Lig2[22], Lig2[23], Lig2[24], Lig2[25], Lig2[26], Lig2[27], Lig2[28], Lig2[29], convBStr(Lig2[30]), Lig2[31], Lig2[32], Lig2[33], Lig2[34], Lig2[35], convBStr(Lig2[36]), Lig2[37], Lig2[38])
+      Utils.db.Exec("insert into Fiches_Comptes (compte_cc,intitule_cc,type_cc,coll,coll_cc, solde,cent_cc,comptr_cc, gen_tv, gen_ta, lettrable) values ( &1,&2,&3,&4,&5,&6,&7,&8,&9,&{10},&{11})", Lig2[1], Lig2[4], "F", 0, Lig2[5], 0, 0, 0, 0, 0, convBStr(Lig2[39]))
+      Utils.db.Exec("Update Fiches_Parametres set dnf = &1", Lig2[1])
+    Else
+      If Lig2[0] = "M" Then
+        Utils.db.Exec("UPdate Fiches_Four  SET  fo_code = &1, fo_col = &2, fo_rs_soc = &3 , fo_nom = &4 , fo_pnm = &5 , fo_adr1 = &6 , fo_adr2 = &7 , fo_cd_ptl = &8 , fo_ville = &9, fo_email = &{10}, fo_tel_std = &{11}, fo_tel_bur = &{12}, fo_tel_post = &{13}, fo_pble = &{14}, fo_fx1 = &{15}, fo_fx2 = &{16}, fo_obs = &{17}, fo_cd_bq = &{18} WHERE fo_code = &1", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], Lig2[17], Lig2[18])
+        Utils.db.Exec("UPdate Fiches_Four  SET  fo_cd_gch = &2, fo_num_cpt = &3, fo_cle_rib = &4, fo_dom = &5, fo_id_tva = &6, fo_cd_cli = &7, fo_collectif = &8, fo_site = &9, fo_cdech = &{10}, fo_pays = &{11}, fo_franco = &{12}, fo_centrale = &{13}, fo_ccentrale = &{14}, fo_copie = &{15}, fo_mincom = &{16}, fo_iban = &{17}, fo_bic = &{18}, fo_exo = &{19}, fo_fport = &{20}, fo_cb = &{21}  WHERE fo_code = &1", Lig2[1], Lig2[19], Lig2[20], Lig2[21], Lig2[22], Lig2[23], Lig2[24], Lig2[25], Lig2[26], Lig2[27], Lig2[28], Lig2[29], convBStr(Lig2[30]), Lig2[31], Lig2[32], Lig2[33], Lig2[34], Lig2[35], convBStr(Lig2[36]), Lig2[37], Lig2[38])
+        Utils.db.Exec("UPdate Fiches_Comptes  SET  lettrable = &3, intitule_cc = &2 where compte_cc = &1", Lig2[1], Lig2[4], convBStr(Lig2[39]))
+      Else
+        If Lig2[0] = "S" Then
+          suppr = 1
+          FourSuppr(Lig2[1])
+        Endif
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les contacts fournisseurs
+  Filename = Schmprix & "/ContactF_Serveur.txt"
+  If Exist(Schmprix & "/ContactF.txt") Then Kill Schmprix & "/ContactF.txt"
+  Try Move Schmprix & "/ContactF_Serveur.txt" To Schmprix & "/ContactF.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/ContactF.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Utils.db.Exec("INSERT INTO Fiches_ContactF (code, num,nom, pnm, fonction, tel, mail, portable) VALUE (&1, &2, &3, &4, &5, &6, &7, &8)", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8])
+    Else
+      If Lig2[0] = "M" Then
+        Utils.db.Exec("Update Fiches_ContactF set nom = &3, pnm = &4, fonction = &5 , tel = &6, mail = &7, portable = &8 where code = &1 and num = &2", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8])
+      Else
+        If Lig2[0] = "S" Then
+          Utils.db.Exec("DELETE FROM Fiches_ContactF WHERE code = &1 and num = &2", Lig2[1], Lig2[2])
+        Endif
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  'On traite les docs fournisseurs
+  Filename = Schmprix & "/DocF_Serveur.txt"
+  If Exist(Schmprix & "/DocF.txt") Then Kill Schmprix & "/DocF.txt"
+  Try Move Schmprix & "/DocF_Serveur.txt" To Schmprix & "/DocF.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/DocF.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Try Utils.db.Exec("INSERT INTO Docs_Fournisseurs (code,doc, doc2, org) values ( &1, &2, &3, &4)", Lig2[1], Lig2[2], Lig2[1] & "," & Lig2[3], "Docs")
+    Else
+      If Lig2[0] = "S" Then
+        Utils.db.Exec("DELETE FROM Docs_Fournisseurs WHERE code = &1 and doc = &2", Lig2[1], Lig2[2])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les clients
+  Filename = Schmprix & "/Cli_Serveur.txt"
+  If Exist(Schmprix & "/Cli.txt") Then Kill Schmprix & "/Cli.txt"
+  Try Move Schmprix & "/Cli_Serveur.txt" To Schmprix & "/Cli.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Cli.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Utils.db.Exec("INSERT INTO Fiches_Cli (cli_code,cli_rs_soc,cli_nom,cli_pnm,cli_adr1,cli_adr2,cli_cd_ptl,cli_ville,cli_email,cli_tel_dom,cli_tel_bur,cli_tel_poste,cli_pble,cli_fx1,cli_fx2,cli_plaf_ecrs,cli_cd_bq,cli_cd_gch,cli_dmln,cli_cle_rib,cli_num_cpt,cli_cd_ent,cli_cd_acc,cli_ref_tir,cli_id_tva,cli_rlvc,cli_rlvf,cli_obs,cli_collectif, cli_typec) VALUES (&1,&2,&3,&4,&5,&6,&7,&8,&9,&{10},&{11},&{12},&{13},&{14},&{15},&{16},&{17},&{18},&{19},&{20},&{21},&{22},&{23},&{24},&{25}, &{26}, &{27}, &{28}, &{29}, &{30})", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], Lig2[17], Lig2[18], Lig2[19], Lig2[20], Lig2[21], Lig2[22], Lig2[23], Lig2[24], Lig2[25], convBStr(Lig2[26]), convBStr(Lig2[27]), Lig2[28], Lig2[29], Lig2[30])
+      Utils.db.Exec("Update Fiches_Cli set cli_rmo = &2, cli_rart = &3, cli_exo = &4, cli_cdech = &5, cli_typec = &6, cli_expl = &7, cli_pays = &8, cli_statut = &9, cli_reg = &{10}, cli_copie = &{11}, cli_actif = &{12}, cli_div = &{13}, cli_iban = &{14}, cli_bic = &{15}, cli_rum = &{16}, cli_datab = &{17}, cli_aban = &{18}, cli_sage = &{19}, cli_livraison = &{20}, cli_comm = &{21}, cli_autoent = &{22} where cli_code = &1", Lig2[1], Lig2[31], Lig2[32], convBStr(Lig2[33]), Lig2[34], Lig2[35], Lig2[36], Lig2[37], Lig2[38], Lig2[39], Lig2[40], convBStr(Lig2[41]), convBStr(Lig2[42]), Lig2[43], Lig2[44], Lig2[45], Lig2[46], Lig2[47], Lig2[48], convBStr(Lig2[49]), convBStr(Lig2[50]), Lig2[51])
+      Utils.db.Exec("insert- into Fiches_Comptes (compte_cc,intitule_cc,type_cc,coll,coll_cc, solde,cent_cc,comptr_cc, gen_tv, gen_ta, lettrable) values ( &1,&2,&3,&4,&5,&6,&7,&8,&9,&{10},&{11})", Lig2[1], Lig2[4], "F", 0, Lig2[5], 0, 0, 0, 0, 0, True)
+      Utils.db.Exec("Update Fiches_Parametres set dnc = &1", Lig2[1])
+    Else
+      If Lig2[0] = "M" Then
+        Utils.db.Exec("UPdate  Fiches_Cli SET  cli_code = &1, cli_rs_soc= &2, cli_nom = &3, cli_pnm = &4, cli_adr1 = &5, cli_adr2 = &6, cli_cd_ptl = &7, cli_ville = &8, cli_email = &9, cli_tel_dom = &{10}, cli_tel_bur = &{11}, cli_tel_poste = &{12}, cli_pble = &{13}, cli_fx1 = &{14}, cli_fx2 = &{15}, cli_plaf_ecrs = &{16}, cli_cd_bq = &{17}, cli_cd_gch = &{18}, cli_cle_rib = &{19}, cli_num_cpt = &{20}, cli_dmln = &{21} , cli_cd_ent = &{22}, cli_cd_acc = &{23},cli_ref_tir = &{24}, cli_id_tva = &{25}, cli_rlvc = &{26}, cli_rlvf = &{27}, cli_obs = &{28}, cli_collectif = &{29}, cli_typec = &{30} WHERE cli_code = &1", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11], Lig2[12], Lig2[13], Lig2[14], Lig2[15], Lig2[16], Lig2[17], Lig2[18], Lig2[19], Lig2[20], Lig2[21], Lig2[22], Lig2[23], Lig2[24], Lig2[25], convBStr(Lig2[26]), convBStr(Lig2[27]), Lig2[28], Lig2[29], Lig2[30])
+        Utils.db.Exec("Update Fiches_Cli set cli_rmo = &2, cli_rart = &3, cli_exo = &4, cli_cdech = &5, cli_typec = &6, cli_expl = &7, cli_pays = &8, cli_statut = &9, cli_reg = &{10}, cli_copie = &{11}, cli_actif = &{12}, cli_div = &{13}, cli_iban = &{14}, cli_bic = &{15}, cli_rum = &{16}, cli_datab = &{17}, cli_aban = &{18}, cli_sage = &{19}, cli_livraison = &{20}, cli_comm = &{21}, cli_autoent = &{22} where cli_code = &1", Lig2[1], Lig2[31], Lig2[32], convBStr(Lig2[33]), Lig2[34], Lig2[35], Lig2[36], Lig2[37], Lig2[38], Lig2[39], Lig2[40], convBStr(Lig2[41]), convBStr(Lig2[42]), Lig2[43], Lig2[44], Lig2[45], Lig2[46], Lig2[47], Lig2[48], convBStr(Lig2[49]), convBStr(Lig2[50]), convBStr(Lig2[51]))
+        Utils.db.Exec("UPdate Fiches_Comptes  SET  lettrable = &3, intitule_cc = &3 where compte_cc = &1", Lig2[1], Lig2[4], convBStr(Lig2[52]))
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  ' On traite les contacts clients
+  Filename = Schmprix & "/ContactC_Serveur.txt"
+  If Exist(Schmprix & "/ContactC.txt") Then Kill Schmprix & "/ContactC.txt"
+  Try Move Schmprix & "/ContactC_Serveur.txt" To Schmprix & "/ContactC.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/ContactC.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Utils.db.Exec("INSERT INTO Fiches_ContactC (code, num,nom, pnm, fonction, tel, mail, portable) VALUE (&1, &2, &3, &4, &5, &6, &7, &8)", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8])
+    Else
+      If Lig2[0] = "M" Then
+        Utils.db.Exec("Update Fiches_ContactC set nom = &3, pnm = &4, fonction = &5 , tel = &6, mail = &7, portable = &8 where code = &1 and num = &2", Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8])
+      Else
+        If Lig2[0] = "S" Then
+          Utils.db.Exec("DELETE FROM Fiches_ContactC WHERE code = &1 and num = &2", Lig2[1], Lig2[2])
+        Endif
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  'On traite les docs clients
+  Filename = Schmprix & "/DocC_Serveur.txt"
+  If Exist(Schmprix & "/DocC.txt") Then Kill Schmprix & "/DocC.txt"
+  Try Move Schmprix & "/DocC_Serveur.txt" To Schmprix & "/DocC.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/DocC.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "C" Then
+      Try Utils.db.Exec("INSERT INTO Docs_Clients (code,doc, doc2, org) values ( &1, &2, &3, &4)", Lig2[1], Lig2[2], Lig2[1] & "," & Lig2[3], "Docs")
+    Else
+      If Lig2[0] = "S" Then
+        Utils.db.Exec("DELETE FROM Docs_Clients WHERE code = &1 and doc = &2", Lig2[1], Lig2[2])
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+  'On traite les futures bases tarif
+  Filename = Schmprix & "/MajTarif2_Serveur.txt"
+  If Exist(Schmprix & "/MajTarif2.txt") Then Kill Schmprix & "/MajTarif2.txt"
+  Try Move Schmprix & "/MajTarif2_Serveur.txt" To Schmprix & "/MajTarif2.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/MajTarif2.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    Utils.db.Exec("UPdate Fiches_Art  SET  art_pbht = &1, art_tr = &2, art_pauaht =&3, art_pvht = &4, art_pvttc = &5, art_prvt = &6, art_paht = &7, art_coef = &8, art_pbfbt = &9, art_datefbt = &{10},  art_ddatefbt = &{11} WHERE art_code = &{12}", Lig2[0], Lig2[1], Lig2[2], Lig2[3], Lig2[4], Lig2[5], Lig2[6], Lig2[7], Lig2[8], Lig2[9], Lig2[10], Lig2[11])
+  Wend
+  Close #hfile
+
+  'On traite les étiquettes
+  Filename = Schmprix & "/Etiq_Serveur.txt"
+  If Exist(Schmprix & "/Etiq.txt") Then Kill Schmprix & "/Etiq.txt"
+  Try Move Schmprix & "/Etiq_Serveur.txt" To Schmprix & "/Etiq.txt"
+  Try hFile = Open filename For Create
+  Filename = Schmprix & "/Etiq.txt"
+  If Exist(filename) Then
+    Try hFile = Open filename For Read Write
+  Endif
+  While Not Eof(hFile)
+    Line Input #hFile, Lig
+    Lig2 = Split(Lig, ";")
+    If Lig2[0] = "P" Then
+      Etiqp = Utils.db.Exec("SELECT * FROM Fiches_EtiProd where code = &1", Lig2[2])
+      If Etiqp.Available Then
+        Try Qteetiq = Etiqp!nombre + Lig2[3]
+        If Not Error Then Utils.db.Exec("UPdate  Fiches_EtiProd  SET code = &1, nombre = &2 WHERE code = &1", Lig2[2], Qteetiq)
+      Else
+        Utils.db.Exec("INSERT INTO  Fiches_EtiProd (code,nombre) VALUES (&1, &2)", Lig2[2], Lig2[3])
+      Endif
+    Else
+      Etiqp = Utils.db.Exec("SELECT * FROM Fiches_EtiGond where code = &1", Lig2[2])
+      If Etiqp.Available Then
+        Utils.db.Exec("UPdate  Fiches_EtiGond  SET code = &1, nombre = &2 WHERE code = &1", Lig2[2], 1)
+      Else
+        Utils.db.Exec("INSERT INTO Fiches_EtiGond(code,nombre) VALUES (&1, &2)", Lig2[2], 1)
+      Endif
+    Endif
+  Wend
+  Close #hfile
+
+End
+
+Public Sub DelCodequ(codep As String, codeq As String)
+
+  Dim Requ As Result
+
+  Requ = Utils.db.Exec("Update Fiches_Art set art_cequ = &3 where art_code = &1 and art_cequ = &2", codep, Codeq, "")
+  Utils.db.Exec("DELETE FROM Fiches_Cequ WHERE codequ = &2 or codep = &2", codep, Codeq)
+
+End
+
+Public Sub MajCodeBarre(codep As String, cbarre As String)
+
+  Dim rbarre As Result
+
+  Rbarre = Utils.db.Exec("SELECT * FROM Fiches_CdBarre where codeb = &1", cbarre)
+  If Not Rbarre.Available Then Utils.db.Exec("INSERT INTO Fiches_CdBarre (codep, codeb) VALUES (&1, &2)", codep, cbarre)
+
+End
+
+Public Sub DelCodeBarre(codep As String, cbarre As String)
+
+  Try Utils.db.Exec("DELETE FROM Fiches_CdBarre WHERE codeb = &1", Cbarre)
+
+End
+
+Public Sub MajRpl1(code As String, Rpl1 As String)
+
+  Dim rpl As Result
+
+  Rpl = Utils.db.Exec("SELECT * FROM Fiches_Rpl1 where codep = &1 and coderpl1 = &2", code, Rpl1)
+  If Not Rpl.Available Then Utils.db.Exec("INSERT INTO  Fiches_Rpl1 (codep, coderpl1) VALUES (&1, &2)", code, Rpl1)
+  Rpl = Utils.db.Exec("SELECT * FROM  Fiches_Rpl2 where codep = &1 and coderpl2 = &2", Rpl1, code)
+  If Not Rpl.Available Then Utils.db.Exec("INSERT INTO  Fiches_Rpl2 (codep, coderpl2) VALUES (&1, &2)", Rpl1, code)
+
+End
+
+Public Sub DelRpl1(code As String, Rpl1 As String)
+
+  Try Utils.db.Exec("DELETE FROM Fiches_Rpl1 WHERE codep = &1 and coderpl1 = &2", code, Rpl1)
+  Try Utils.db.Exec("DELETE FROM  Fiches_Rpl2 WHERE codep = &1 and coderpl2 = &2", Rpl1, code)
+
+End
+
+Public Sub MajRpl2(code As String, Rpl2 As String)
+
+  Dim rpl As Result
+
+  Rpl = Utils.db.Exec("SELECT * FROM  Fiches_Rpl1 where codep = &1 and coderpl1 = &2", code, Rpl2)
+  If Not Rpl.Available Then Utils.db.Exec("INSERT INTO  Fiches_Rpl1 (codep, coderpl1) VALUES (&1, &2)", code, Rpl2)
+  Rpl = Utils.db.Exec("SELECT * FROM  Fiches_Rpl2 where codep = &1 and coderpl2 = &2", Rpl2, code)
+  If Not Rpl.Available Then Utils.db.Exec("INSERT INTO  Fiches_Rpl2 (codep, coderpl2) VALUES (&1, &2)", Rpl2, code)
+
+End
+
+Public Sub DelRpl2(code As String, Rpl2 As String)
+
+  Try Utils.db.Exec("DELETE FROM  Fiches_Rpl1 WHERE codep = &1 and coderpl1 = &2", code, Rpl2)
+  Try Utils.db.Exec("DELETE FROM  Fiches_Rpl2 WHERE codep = &1 and coderpl2 = &2", Rpl2, code)
+
+End
+
+Public Function convBStr(bln As String) As String
+
+  Dim sRet As String
+
+  If bln = "0" Or If bln = "" Then
+    sRet = "0"
+  Else
+    sRet = "1"
+  Endif
+  Return sRet
+
+End
+
+Public Sub MajEqu(code As String, cequ As String)
+
+  Dim requ, requ2 As Result
+
+  Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", Cequ, code)
+  Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", Code, code)
+  Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", Cequ, Cequ)
+  Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codequ, codep) VALUES (&1, &2)", Cequ, code)
+  Try Utils.db.Exec("update Fiches_Cequ art_cequ = &1 where art_code = &2 ", Cequ, code)
+
+  Requ2 = Utils.db.Exec("SELECT * FROM Fiches_Cequ where codep = &1", Code)
+  Repeat
+    Requ = Utils.db.Exec("SELECT * FROM Fiches_Cequ where codep = &1", requ2!codequ)
+    Repeat
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codequ, codep) VALUES (&1, &2)", Code, Requ!codequ)
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", requ!codep, code)
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", Requ!codequ, requ2!codep)
+    Until Requ.MoveNext()
+  Until Requ2.movenext()
+
+  Requ2 = Utils.db.Exec("SELECT * FROM Fiches_Cequ where codep = &1", Cequ)
+  Repeat
+    Requ = Utils.db.Exec("SELECT * FROM Fiches_Cequ where codep = &1", requ2!codequ)
+    Repeat
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codequ, codep) VALUES (&1, &2)", Code, Requ!codequ)
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", requ!codep, code)
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", Requ!codequ, requ2!codep)
+    Until Requ.MoveNext()
+  Until Requ2.movenext()
+
+  Requ2 = Utils.db.Exec("SELECT * FROM Fiches_Cequ where codequ = &1", Cequ)
+  Repeat
+    Requ = Utils.db.Exec("SELECT * FROM Fiches_Cequ where codep = &1", requ2!codequ)
+    Repeat
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codequ, codep) VALUES (&1, &2)", requ2!codequ, code)
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", requ2!codep, Requ!codequ)
+      Try Utils.db.Exec("INSERT INTO Fiches_Cequ (codep, codequ) VALUES (&1, &2)", Requ!codequ, requ2!codep)
+    Until Requ.MoveNext()
+  Until Requ2.movenext()
+
+End
+
+'**********************************
+'* Suppression du code Article    *
+'**********************************
+
+Public Sub art_Suppr(code As String, cequ As String, cfour As String)
+
+  Dim rResult As Result
+  Dim texte3, Lig As String
+  Dim hfile3 As File
+
+  Texte3 = Schmprix & "/ErreurS.txt"
+  Try hFile3 = Open texte3 For Write Create
+  While Not Eof(hFile3)
+    Line Input #hFile3, Lig
+  Wend
+  If Not IsNull(code) Then
+    rResult = Utils.db.Exec("SELECT * FROM Fiches_Art WHERE  art_code = &1", code)
+    If rResult!art_stocke And rResult!art_qte <> "0.000" Then
+      Print #hFile3, "Suppression impossible !  Le produit " & code & " a un stock > 0"
+      Suppr = 0
+    Else
+      rResult = Utils.db.Exec("SELECT * FROM Fiches_Ligbl WHERE  code_ligbl = &1  and typel_ligbl = 'A'", code)
+      If rResult.Available Then
+        Print #hFile3, "Suppression impossible !  Le produit " & code & " est utilisé en facturation"
+        Suppr = 0
+      Else
+        rResult = Utils.db.Exec("SELECT * FROM Fiches_Ligcom WHERE  code = &1", code)
+        If rResult.Available Then
+          Print #hFile3, "Suppression impossible !  Le produit " & code & " est utilisé en commande fournisseurs"
+          Suppr = 0
+        Else
+          rResult = Utils.db.Exec("SELECT * FROM Fiches_Mvtexp WHERE  code = &1 or code = &2", code, cfour)
+          If rResult.Available Then
+            Print #hFile3, "Suppression impossible !  Le produit " & code & " est utilisé dans les mouvements exceptionnels"
+            Suppr = 0
+          Else
+            Try rResult = Utils.db.Exec("SELECT * FROM Fiches_InvT WHERE  inv_code = &1", code)
+            If rResult.Available Then
+              Print #hFile3, "Suppression impossible !  Le produit " & code & " est utilisé dans l'inventaire"
+              Suppr = 0
+            Else
+              rResult = Utils.db.Exec("SELECT * FROM  Fiches_Ligrecpt as e inner join Fiches_Entrecpt as a on a.numrecpt = e.numrecpt where code = &1", code)
+              If rResult.Available Then
+                If Not rResult!validee Then
+                  Print #hFile3, "Suppression impossible !  Le produit " & code & " est utilisé dans les réceptions non validées"
+                  Suppr = 0
+                Endif
+              Else
+                Try rResult = Utils.db.Exec("SELECT * FROM Fiches_Mat WHERE  mat_code = &1", code)
+                If rResult.Available Then
+                  Print #hFile3, "Suppression impossible !  Le produit " & code & " est utilisé dans les fiches matériels"
+                  Suppr = 0
+                Endif
+              Endif
+            Endif
+          Endif
+        Endif
+      Endif
+    Endif
+  Endif
+
+End
+
+Public Sub FourSuppr(Code As String)
+
+  Dim rResult As Result
+  Dim texte3, Lig As String
+  Dim hfile3 As File
+
+  Texte3 = Schmprix & "/ErreurS.txt"
+  Try hFile3 = Open texte3 For Write Create
+  While Not Eof(hFile3)
+    Line Input #hFile3, Lig
+  Wend
+  If Not IsNull(code) Then
+    Suppr = 1
+    rResult = Utils.db.Exec("SELECT * FROM Fiches_Mvt WHERE  compte = &1", code)
+    If rResult.Available Then
+      Print #hFile3, " Suppression impossible ! compte " & code & " Mouvementé"
+      Suppr = 0
+    Else
+      rResult = Utils.db.Exec("SELECT * FROM Fiches_Mo WHERE  mo_four = &1", code)
+      If rResult.Available Then
+        Print #hFile3, " Suppression impossible ! compte " & code & "  utilisé dans la table des MO"
+        Suppr = 0
+      Else
+        rResult = Utils.db.Exec("SELECT * FROM Fiches_Art WHERE  art_four = &1", code)
+        If rResult.Available Then
+          Print #hFile3, " Suppression impossible ! compte " & code & "  utilisé dans la table des articles"
+          Suppr = 0
+        Else
+          rResult = Utils.db.Exec("SELECT * FROM Fiches_Entcom WHERE  four = &1", code)
+          If rResult.Available Then
+            Print #hFile3, " Suppression impossible ! compte " & code & "  utilisé dans les commandes fournisseurs"
+            Suppr = 0
+          Else
+            rResult = Utils.db.Exec("SELECT * FROM Fiches_Entrecpt WHERE  four = &1", code)
+            If rResult.Available Then
+              Print #hFile3, " Suppression impossible ! compte " & code & "  utilisé dans en réception de marchandises"
+              Suppr = 0
+            Endif
+          Endif
+        Endif
+      Endif
+    Endif
+    If Suppr = 1 Then
+      Utils.db.Exec("DELETE FROM Fiches_Four WHERE fo_code = &1", code)
+      Utils.db.Exec("DELETE from Fiches_Comptes where compte_cc = &1", code)
+      Utils.db.Exec("DELETE FROM  Docs_Fournisseurs  WHERE code = &1", code)
+      Utils.db.Exec("DELETE from Fiches_Four_Vtl  where code =&1", code)
+    Endif
+  Endif
+
+End
+
+'On supprime les familles
+Public Sub FamSuppr(Code As String)
+
+  Dim rResult As Result
+  Dim texte3, Lig As String
+  Dim hfile3 As File
+
+  Texte3 = Schmprix & "/ErreurS.txt"
+  Try hFile3 = Open texte3 For Write Create
+  While Not Eof(hFile3)
+    Line Input #hFile3, Lig
+  Wend
+  If Not IsNull(code) Then
+
+    Suppr = 1
+    rResult = Utils.db.Exec("SELECT * FROM Fiches_Art WHERE  art_fam = &1", Code)
+    If rResult.Available Then
+      Print #hFile3, "Suppression impossible ! Il existe des articles dans la famille " & Code
+      Suppr = 0
+    Else
+      rResult = Utils.db.Exec("SELECT * FROM Fiches_Mo WHERE  mo_fam = &1", Code)
+      If rResult.Available Then
+        Print #hFile3, " Suppression impossible ! Il existe une main d'oeuvre dans la famille " & Code
+        Suppr = 0
+      Else
+        If Suppr = 1 Then
+          Utils.db.Exec("DELETE FROM Fiches_Fam WHERE code_fam = &1", Code)
+        Endif
+      Endif
+    Endif
+  Endif
+
+End
