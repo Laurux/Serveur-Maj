@@ -10,5 +10,4 @@ vgcore.*
 .*.prof
 .lang/*.pot
 .gambas/*
-.project
 #----
